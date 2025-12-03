@@ -21,7 +21,13 @@
    uv sync
    ```
 
-3. **Configure the API key**
+3. **Start the venv (if you want to start the server manually)**
+
+   ```bash
+   source .venv/bin/activate
+   ```
+
+4. **Configure the API key**
 
    Create a `.env` file in the root of the project with the following content:
 
