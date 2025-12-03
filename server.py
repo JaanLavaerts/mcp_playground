@@ -1,94 +1,56 @@
-from typing import Any
-import httpx
 from mcp.server.fastmcp import FastMCP
-import dotenv
+import sqlite3
 
-server = FastMCP("balldontlie")
+server = FastMCP("not-solita-corp")
 
-API_BASE = "https://api.balldontlie.io/nba/v1"
-USER_AGENT = "balldontlie-mcp/1.0"
-API_KEY = dotenv.get_key(".env", "BALLDONTLIE_API_KEY") or ""
+def get_db_connection() -> sqlite3.Connection:
+    db_path = 'db/database.db'
+    conn = sqlite3.connect(db_path)
+    return conn
 
-def format_teams_response(response):
-    formatted_text = ""
-    for team in response.get("data", []):
-        formatted_text += (
-            f"Team ID: {team['id']}\n"
-            f"Conference: {team['conference']}\n"
-            f"Division: {team['division']}\n"
-            f"City: {team['city']}\n"
-            f"Name: {team['name']}\n"
-            f"Full Name: {team['full_name']}\n"
-            f"Abbreviation: {team['abbreviation']}\n"
-            "----------------------\n"
-        )
-    return formatted_text
+def get_all_user_data(name): 
+    with open('db/get_user_data.sql', 'r') as file:
+        query = file.read()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(query, (name,))
+    data = cursor.fetchall()
+    conn.close()
+    return str(data)
 
-def format_games_response(response):
-    formatted_text = ""
-    for game in response.get("data", []):
-        formatted_text += (
-            f"Game ID: {game['id']}\n"
-            f"Date: {game['date']}\n"
-            f"Home Team: {game['home_team']['full_name']} ({game['home_team_score']})\n"
-            f"Visitor Team: {game['visitor_team']['full_name']} ({game['visitor_team_score']})\n"
-            "----------------------\n"
-        )
-    return formatted_text
-
-async def make_request(url: str) -> dict[str, Any] | None:
-    headers = {"User-Agent": USER_AGENT, "Authorization": f"Bearer {API_KEY}"} if USER_AGENT else {}
-    async with httpx.AsyncClient() as client:
-        response = await client.get(url, headers=headers)
-        if response.status_code == 200:
-            return response.json()
-    return None
-
+@server.resource("resource://schema")
+def db_schema():
+    with open('db/schema.sql', 'r') as file:
+        schema = file.read()
+    return schema
 
 @server.tool()
-async def get_teams(conference: str | None = None, division: str | None = None) -> str:
-    url = f"{API_BASE}/teams/"
-    params = []
-    if conference:
-        params.append(f"conference={conference}")
-    if division:
-        params.append(f"division={division}")
-    if params:
-        url += "?" + "&".join(params)
+async def get_users():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT user_name FROM users")
+    users = cursor.fetchall()
+    conn.close()
+    return users
 
-    response = await make_request(url)
-
-    if response:
-        return format_teams_response(response)
-
-    return "Failed to fetch teams."
-
-    
 @server.tool()
-async def get_games(date: str | None = None) -> str:
-    url = f"{API_BASE}/games/"
-    if date:
-        url += f"?dates[]={date}"
+async def get_user_info(relation, name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = f"SELECT * FROM {relation} INNER JOIN users ON {relation}.user_id = users.id WHERE users.user_name = ?"
+    cursor.execute(query, (name,))
+    result = cursor.fetchall()
+    conn.close()
+    return result
 
-    response = await make_request(url)
-
-    if response:
-        return format_games_response(response)
-    
-    return "Failed to fetch games."
-
-@server.resource("resource://contacts")
-def get_contacts() -> str:
-    with open("contacts.txt", "r") as f:
-        return f.read()
-
-@server.prompt()
-def analyze_file(file_path: str) -> str:
-    with open(file_path, "r") as f:
-        content = f.read()
-    return f"analyze the content of the file at {file_path}:\n\n{content}"
-
-
+@server.prompt("describe-user")
+async def describe_user(name):
+    data = get_all_user_data(name)
+    return (
+        f"The following data is available for the user '{name}':\n"
+        f"{data}\n"
+        "Provide a concise summary of the user's information based on the data above. If no data is available, state that no information is found."
+    )
 
 def main():
     print("Started MCP server...")
