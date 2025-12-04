@@ -1,5 +1,7 @@
 from mcp.server.fastmcp import FastMCP
 import sqlite3
+import mailtrap as mt
+import dotenv
 
 server = FastMCP("not-solita-corp")
 
@@ -42,6 +44,25 @@ async def get_user_info(relation, name):
     result = cursor.fetchall()
     conn.close()
     return result
+
+@server.tool()
+async def send_email(subject: str | None = None, body: str | None = None) -> str:
+    mailtrap_token = dotenv.get_key(".env", "MAILTRAP_API_TOKEN") or ""
+    if not mailtrap_token:
+        return "Mailtrap API token is not set."
+
+    mail = mt.Mail(
+        sender=mt.Address(email="hello@demomailtrap.com", name="Mailtrap Test"),
+        to=[mt.Address(email="matteoboulanger711@gmail.com")],
+        subject=subject,
+        text=body,
+        category="Integration Test",
+    )
+
+    client = mt.MailtrapClient(token=mailtrap_token)
+    response = client.send(mail)
+    logging_info = f"Email sent to: {subject}"
+    return logging_info
 
 @server.prompt("describe-user")
 async def describe_user(name):
