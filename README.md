@@ -49,7 +49,7 @@
 
 ### Starting the server
 
-The server currently uses IO for communication. It is not meant to be started manually but accessed through an MCP client.
+The server currently uses IO for communication. It is not meant to be started manually, instead it should be accessed through an MCP client.
 
 ### Implemented Functions
 
@@ -67,7 +67,15 @@ The following functions are implemented in the server:
 
    - Retrieves detailed information about a user, including data from all related tables (e.g., certificates, projects, degrees, etc.).
 
-4. **`describe_user` (prompt)**
+4. **`send_email` (tool)**
+
+   - Sends an email using mailtrap.
+   - Requires API-key in .env file:
+     ```
+     MAILTRAP_API_TOKEN=your_mailtrap_api_key
+     ```
+
+5. **`describe_user` (prompt)**
 
    - Provides a prompt to describe a user by fetching their information using the `get_user_info` function and summarizing it in plain English.
 
