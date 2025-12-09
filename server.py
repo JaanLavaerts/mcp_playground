@@ -28,8 +28,7 @@ def db_schema():
     return schema
 
 @server.tool()
-async def get_users(ctx: Context):
-    await ctx.info("Fetching all users from the database.")
+async def get_users():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT user_name FROM users")
@@ -37,8 +36,16 @@ async def get_users(ctx: Context):
     conn.close()
     return users
 
+class UserInfoSchema(BaseModel):
+    name: str
+    relation: str
+
 @server.tool()
-async def get_user_info(relation, name):
+async def get_user_info(ctx: Context):
+    user_info = await ctx.elicit("Enter the user's name and relation to query (e.g., degrees, projects...):", schema=UserInfoSchema)
+    name = user_info.data.name
+    relation = user_info.data.relation
+    
     conn = get_db_connection()
     cursor = conn.cursor()
     query = f"SELECT * FROM {relation} INNER JOIN users ON {relation}.user_id = users.id WHERE users.user_name = ?"
@@ -88,15 +95,11 @@ async def send_email(subject: str | None = None, body: str | None = None) -> str
     logging_info = f"Email sent to: {response.to}, Subject: {response.subject}"
     return logging_info
 
-class UserSchema(BaseModel):
-    name: str
-
 @server.prompt("describe-user")
-async def describe_user(ctx: Context):
-    result = await ctx.elicit("What is the user's name?", schema=UserSchema)
-    data = get_all_user_data(result.data.name)
+async def describe_user(name):
+    data = get_all_user_data(name)
     return (
-        f"The following data is available for the user '{result.data.name}':\n"
+        f"The following data is available for the user '{name}':\n"
         f"{data}\n"
         "Provide a concise summary of the user's information based on the data above. If no data is available, state that no information is found."
     )
