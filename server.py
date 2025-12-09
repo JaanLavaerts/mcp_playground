@@ -77,7 +77,7 @@ async def get_employee_that_fits_project_description(employee_name):
     return result
 
 @server.tool()
-async def send_email(subject: str | None = None, body: str | None = None) -> str:
+async def send_email(subject, body) -> str:
     mailtrap_token = dotenv.get_key(".env", "MAILTRAP_API_TOKEN") or ""
     if not mailtrap_token:
         return "Mailtrap API token is not set."
@@ -95,13 +95,12 @@ async def send_email(subject: str | None = None, body: str | None = None) -> str
     logging_info = f"Email sent to: {response.to}, Subject: {response.subject}"
     return logging_info
 
-@server.prompt("describe-user")
-async def describe_user(name):
-    data = get_all_user_data(name)
+@server.tool()
+async def compose_team_for_project(project_description):
     return (
-        f"The following data is available for the user '{name}':\n"
-        f"{data}\n"
-        "Provide a concise summary of the user's information based on the data above. If no data is available, state that no information is found."
+        f"Based on the project description: '{project_description}', "
+        "analyze the available user data and suggest a suitable team composition. "
+        "Provide reasons for selecting each team member based on their skills and experience."
     )
 
 def main():
