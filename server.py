@@ -48,7 +48,29 @@ async def get_user_info(relation, name):
     return result
 
 @server.tool()
-async def send_email_to(subject: str | None = None, body: str | None = None):
+async def get_employee_that_fits_project_description(employee_name):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = """
+    SELECT *
+    FROM users
+    INNER JOIN certificates ON users.id = certificates.user_id
+    INNER JOIN expertises ON users.id = expertises.user_id
+    INNER JOIN projects ON users.id = projects.user_id
+    INNER JOIN degrees ON users.id = degrees.user_id
+    INNER JOIN working_experiences ON users.id = working_experiences.user_id
+    INNER JOIN strengths ON users.id = strengths.user_id
+    INNER JOIN language_skills ON users.id = language_skills.user_id
+    INNER JOIN industry_knowledge ON users.id = industry_knowledge.user_id
+    WHERE users.user_name = ?
+    """
+    cursor.execute(query, (employee_name,))
+    result = cursor.fetchone()
+    conn.close()
+    return result
+
+@server.tool()
+async def send_email(subject: str | None = None, body: str | None = None) -> str:
     mailtrap_token = dotenv.get_key(".env", "MAILTRAP_API_TOKEN") or ""
     if not mailtrap_token:
         return "Mailtrap API token is not set."

@@ -84,7 +84,7 @@ The following functions are implemented in the server:
 Add the following configuration to your MCP client (e.g., Claude Desktop):
 
 - Settings → Developer → Edit config → `claude_desktop_config.json`
-- `mcpServers`: The server name, in this case `mcp_demo`.
+- `mcpServers`: The server name, in this case `not-solita-corp`.
 - `command`: The ABSOLUTE path to the `uv` executable on your system.
 - `args`: The arguments to start the MCP server, including the ABSOLUTE path to the `mcp_playground` directory.
 - Note: Windows paths use backslashes (`\`).
