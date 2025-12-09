@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "cv-solita": {
+      "command": "/Users/jaan.lavaerts/.local/bin/uv",
+      "args": [
+        "--directory",
+        "/Users/jaan.lavaerts/mcp_playground",
+        "run",
+        "server.py"
+      ]
+    }
+  }
+}

@@ -1,9 +1,10 @@
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Context 
+from pydantic import BaseModel
 import sqlite3
 import mailtrap as mt
 import dotenv
 
-server = FastMCP("not-solita-corp")
+server = FastMCP("cv-solita")
 
 def get_db_connection() -> sqlite3.Connection:
     db_path = 'db/database.db'
@@ -27,7 +28,8 @@ def db_schema():
     return schema
 
 @server.tool()
-async def get_users():
+async def get_users(ctx: Context):
+    await ctx.info("Fetching all users from the database.")
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT user_name FROM users")
@@ -46,7 +48,7 @@ async def get_user_info(relation, name):
     return result
 
 @server.tool()
-async def send_email(subject: str | None = None, body: str | None = None) -> str:
+async def send_email_to(subject: str | None = None, body: str | None = None):
     mailtrap_token = dotenv.get_key(".env", "MAILTRAP_API_TOKEN") or ""
     if not mailtrap_token:
         return "Mailtrap API token is not set."
@@ -61,14 +63,18 @@ async def send_email(subject: str | None = None, body: str | None = None) -> str
 
     client = mt.MailtrapClient(token=mailtrap_token)
     response = client.send(mail)
-    logging_info = f"Email sent to: {subject}"
+    logging_info = f"Email sent to: {response.to}, Subject: {response.subject}"
     return logging_info
 
+class UserSchema(BaseModel):
+    name: str
+
 @server.prompt("describe-user")
-async def describe_user(name):
-    data = get_all_user_data(name)
+async def describe_user(ctx: Context):
+    result = await ctx.elicit("What is the user's name?", schema=UserSchema)
+    data = get_all_user_data(result.data.name)
     return (
-        f"The following data is available for the user '{name}':\n"
+        f"The following data is available for the user '{result.data.name}':\n"
         f"{data}\n"
         "Provide a concise summary of the user's information based on the data above. If no data is available, state that no information is found."
     )
