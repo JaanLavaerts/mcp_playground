@@ -1,25 +1,8 @@
-from mcp.server.fastmcp import FastMCP, Context 
-from pydantic import BaseModel
-import sqlite3
-import mailtrap as mt
-import dotenv
+from mcp.server.fastmcp import FastMCP 
+from util import execute_query, send_email_via_mailtrap
+import json
 
 server = FastMCP("cv-solita")
-
-def get_db_connection() -> sqlite3.Connection:
-    db_path = 'db/database.db'
-    conn = sqlite3.connect(db_path)
-    return conn
-
-def get_all_user_data(name): 
-    with open('db/get_user_data.sql', 'r') as file:
-        query = file.read()
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(query, (name,))
-    data = cursor.fetchall()
-    conn.close()
-    return str(data)
 
 @server.resource("resource://schema")
 def db_schema():
@@ -29,78 +12,34 @@ def db_schema():
 
 @server.tool()
 async def get_users():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT user_name FROM users")
-    users = cursor.fetchall()
-    conn.close()
+    query = "SELECT user_name FROM users"
+    users = execute_query(query)
     return users
 
-class UserInfoSchema(BaseModel):
-    name: str
-    relation: str
-
 @server.tool()
-async def get_user_info(ctx: Context):
-    user_info = await ctx.elicit("Enter the user's name and relation to query (e.g., degrees, projects...):", schema=UserInfoSchema)
-    name = user_info.data.name
-    relation = user_info.data.relation
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = f"SELECT * FROM {relation} INNER JOIN users ON {relation}.user_id = users.id WHERE users.user_name = ?"
-    cursor.execute(query, (name,))
-    result = cursor.fetchall()
-    conn.close()
-    return result
+async def get_all_employee_profiles():
+    with open('db/get_all_employee_profiles.sql', 'r') as file:
+        query = file.read()
 
-@server.tool()
-async def get_employee_that_fits_project_description(employee_name):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    query = """
-    SELECT *
-    FROM users
-    INNER JOIN certificates ON users.id = certificates.user_id
-    INNER JOIN expertises ON users.id = expertises.user_id
-    INNER JOIN projects ON users.id = projects.user_id
-    INNER JOIN degrees ON users.id = degrees.user_id
-    INNER JOIN working_experiences ON users.id = working_experiences.user_id
-    INNER JOIN strengths ON users.id = strengths.user_id
-    INNER JOIN language_skills ON users.id = language_skills.user_id
-    INNER JOIN industry_knowledge ON users.id = industry_knowledge.user_id
-    WHERE users.user_name = ?
-    """
-    cursor.execute(query, (employee_name,))
-    result = cursor.fetchone()
-    conn.close()
-    return result
+    rows = execute_query(query)
+    return [json.loads(row[0]) for row in rows]
 
 @server.tool()
 async def send_email(subject, body) -> str:
-    mailtrap_token = dotenv.get_key(".env", "MAILTRAP_API_TOKEN") or ""
-    if not mailtrap_token:
-        return "Mailtrap API token is not set."
+    send_email_via_mailtrap(subject, body)
+    return "Email sent successfully."
 
-    mail = mt.Mail(
-        sender=mt.Address(email="hello@demomailtrap.com", name="Mailtrap Test"),
-        to=[mt.Address(email="matteoboulanger711@gmail.com")],
-        subject=subject,
-        text=body,
-        category="Integration Test",
-    )
-
-    client = mt.MailtrapClient(token=mailtrap_token)
-    response = client.send(mail)
-    logging_info = f"Email sent to: {response.to}, Subject: {response.subject}"
-    return logging_info
-
-@server.tool()
-async def compose_team_for_project(project_description):
+@server.prompt()
+async def compose_team_for_project(project_description, team_size):
     return (
-        f"Based on the project description: '{project_description}', "
-        "analyze the available user data and suggest a suitable team composition. "
-        "Provide reasons for selecting each team member based on their skills and experience."
+        "You are responsible for forming a project team.\n\n"
+        f"Project description:\n{project_description}\n\n"
+
+        "First, call the tool `get_all_employee_profiles` to retrieve "
+        "the full list of employees and their skills.\n"
+        f"Then analyze the data and propose the top {team_size} candidates.\n"
+
+        "Return final answer with reasoning about why you selected these candidates."
     )
 
 def main():

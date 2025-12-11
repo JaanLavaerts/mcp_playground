@@ -1,4 +1,5 @@
-SELECT json_object(
+SELECT
+    json_object(
         'id', u.id,
         'user_name', u.user_name,
         'locale', u.locale,
@@ -8,7 +9,8 @@ SELECT json_object(
         'user_location', u.user_location,
         'user_title', u.user_title,
         'user_business_unit', u.user_business_unit,
-        'certificates', (
+
+        'certificates', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', c.id,
@@ -22,8 +24,9 @@ SELECT json_object(
             )
             FROM certificates c
             WHERE c.user_id = u.id
-        ),
-        'expertises', (
+        ), '[]'),
+
+        'expertises', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', e.id,
@@ -34,8 +37,9 @@ SELECT json_object(
             )
             FROM expertises e
             WHERE e.user_id = u.id
-        ),
-        'projects', (
+        ), '[]'),
+
+        'projects', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', p.id,
@@ -49,8 +53,9 @@ SELECT json_object(
             )
             FROM projects p
             WHERE p.user_id = u.id
-        ),
-        'degrees', (
+        ), '[]'),
+
+        'degrees', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', d.id,
@@ -65,8 +70,9 @@ SELECT json_object(
             )
             FROM degrees d
             WHERE d.user_id = u.id
-        ),
-        'working_experiences', (
+        ), '[]'),
+
+        'working_experiences', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', w.id,
@@ -81,8 +87,9 @@ SELECT json_object(
             )
             FROM working_experiences w
             WHERE w.user_id = u.id
-        ),
-        'strengths', (
+        ), '[]'),
+
+        'strengths', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', s.id,
@@ -91,8 +98,9 @@ SELECT json_object(
             )
             FROM strengths s
             WHERE s.user_id = u.id
-        ),
-        'positions_of_trust', (
+        ), '[]'),
+
+        'positions_of_trust', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', pt.id,
@@ -107,8 +115,9 @@ SELECT json_object(
             )
             FROM positions_of_trust pt
             WHERE pt.user_id = u.id
-        ),
-        'social_media', (
+        ), '[]'),
+
+        'social_media', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', sm.id,
@@ -118,8 +127,9 @@ SELECT json_object(
             )
             FROM social_media sm
             WHERE sm.user_id = u.id
-        ),
-        'hobbies', (
+        ), '[]'),
+
+        'hobbies', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', h.id,
@@ -128,8 +138,9 @@ SELECT json_object(
             )
             FROM hobbies h
             WHERE h.user_id = u.id
-        ),
-        'language_skills', (
+        ), '[]'),
+
+        'language_skills', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', ls.id,
@@ -139,8 +150,9 @@ SELECT json_object(
             )
             FROM language_skills ls
             WHERE ls.user_id = u.id
-        ),
-        'customer_quotes', (
+        ), '[]'),
+
+        'customer_quotes', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', cq.id,
@@ -150,8 +162,9 @@ SELECT json_object(
             )
             FROM customer_quote cq
             WHERE cq.user_id = u.id
-        ),
-        'colleague_quotes', (
+        ), '[]'),
+
+        'colleague_quotes', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', cq.id,
@@ -161,8 +174,9 @@ SELECT json_object(
             )
             FROM colleague_quote cq
             WHERE cq.user_id = u.id
-        ),
-        'industry_knowledge', (
+        ), '[]'),
+
+        'industry_knowledge', COALESCE((
             SELECT json_group_array(
                 json_object(
                     'id', ik.id,
@@ -173,7 +187,7 @@ SELECT json_object(
             )
             FROM industry_knowledge ik
             WHERE ik.user_id = u.id
-        )
-    )
-    FROM users u
-    WHERE u.user_name = ?;
+        ), '[]')
+    ) AS profile_json
+
+FROM users u;
