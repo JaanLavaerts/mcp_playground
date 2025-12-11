@@ -22,7 +22,7 @@ def send_email_via_mailtrap(subject: str, body: str) -> str:
 
     mail = mt.Mail(
         sender=mt.Address(email="hello@demomailtrap.com", name="Mailtrap Test"),
-        to=[mt.Address(email="matteoboulanger711@gmail.com")],
+        to=[mt.Address(email="jaan.lavaerts@solita.fi")],
         subject=subject,
         text=body,
         category="Integration Test",
