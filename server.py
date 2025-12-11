@@ -35,7 +35,7 @@ async def compose_team_for_project(project_description, team_size):
         "You are responsible for forming a project team.\n\n"
         f"Project description:\n{project_description}\n\n"
 
-        "First, call the tool `get_all_employee_profiles` to retrieve "
+        "First, call the tool `get_all_employee_profiles` once to retrieve "
         "the full list of employees and their skills.\n"
         f"Then analyze the data and propose the top {team_size} candidates.\n"
 

@@ -21,7 +21,7 @@ def send_email_via_mailtrap(subject: str, body: str) -> str:
         return "Mailtrap API token is not set."
 
     mail = mt.Mail(
-        sender=mt.Address(email="hello@demomailtrap.com", name="Mailtrap Test"),
+        sender=mt.Address(email="hello@demomailtrap.co", name="Mailtrap Test"),
         to=[mt.Address(email="jaan.lavaerts@solita.fi")],
         subject=subject,
         text=body,
