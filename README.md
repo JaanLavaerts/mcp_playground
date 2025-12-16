@@ -63,9 +63,9 @@ The following functions are implemented in the server:
 
    - Fetches a list of all user names from the `users` table in the database.
 
-3. **`get_user_info` (tool)**
+3. **`get_all_employee_profiles` (tool)**
 
-   - Retrieves detailed information about a user, including data from all related tables (e.g., certificates, projects, degrees, etc.).
+   - Retrieves all employee profiles
 
 4. **`send_email` (tool)**
 
@@ -75,9 +75,9 @@ The following functions are implemented in the server:
      MAILTRAP_API_TOKEN=your_mailtrap_api_key
      ```
 
-5. **`describe_user` (prompt)**
+5. **`propose_team_for_project` (prompt)**
 
-   - Provides a prompt to describe a user by fetching their information using the `get_user_info` function and summarizing it in plain English.
+   - Given a project description and team size, proposes a team of employees best suited for the project based on their skills and experience.
 
 ### Integration with Claude Desktop as the MCP client
 

@@ -1,1 +1,0 @@
-Python-based ETL project to streamline data workflows, enabling faster, more accurate business insights. The pipeline extracts data from multiple sources, transforms it to ensure consistency and quality, and loads it into a centralized analytics platform. This automation reduces manual effort, supports data-driven decision-making, and improves operational efficiency.
